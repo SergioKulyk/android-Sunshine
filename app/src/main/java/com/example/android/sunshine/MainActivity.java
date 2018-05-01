@@ -56,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
         new FetchWeatherTask().execute(location);
     }
 
-    private class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
+    public class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
 
         @Override
         protected String[] doInBackground(String... params) {
