@@ -29,7 +29,6 @@
     <string name="action_map">Map Location</string>
     <string name="action_share">Share</string>
 
-    <!-- The label of the setting menu item -->
     <string name="action_settings">Settings</string>
 
     <!--Used in overflow menu to refresh weather data-->
