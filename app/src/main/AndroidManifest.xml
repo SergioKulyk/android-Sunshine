@@ -28,7 +28,8 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".MainActivity"
-            android:label="@string/app_name">
+            android:label="@string/app_name"
+            android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -41,6 +42,14 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MainActivity" />
         </activity>
+<<<<<<< Updated upstream
+=======
+        <activity
+            android:name=".SettingsActivity"
+            android:label="@string/action_settings">
+
+        </activity>
+>>>>>>> Stashed changes
     </application>
 
 </manifest>
