@@ -24,6 +24,11 @@
         android:orderInCategory="1"
         android:title="@string/action_refresh"
         app:showAsAction="ifRoom"/>
+
+    <item android:id="@+id/action_setting"
+        android:title="@string/action_settings"
+        app:showAsAction="never" />
+
     <item
         android:id="@+id/action_map"
         android:title="@string/action_map"
