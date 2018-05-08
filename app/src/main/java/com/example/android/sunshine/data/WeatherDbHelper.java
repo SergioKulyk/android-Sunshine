@@ -32,7 +32,7 @@ public class WeatherDbHelper extends SQLiteOpenHelper {
      */
     public static final String DATABASE_NAME = "weather.db";
 
-//  TODO (2) Increment the database version after altering the behavior of the table
+//  COMPLETED (2) Increment the database version after altering the behavior of the table
     /*
      * If you change the database schema, you must increment the database version or the onUpgrade
      * method will not be called.
@@ -44,7 +44,7 @@ public class WeatherDbHelper extends SQLiteOpenHelper {
      * use-case, we wanted to watch out for it and warn you what could happen if you mistakenly
      * version your databases.
      */
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
     public WeatherDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -66,6 +66,7 @@ public class WeatherDbHelper extends SQLiteOpenHelper {
         final String SQL_CREATE_WEATHER_TABLE =
 
                 "CREATE TABLE " + WeatherEntry.TABLE_NAME + " (" +
+//              COMPLETED (1) Append NOT NULL to each column's type declaration except for the _ID
                 /*
                  * WeatherEntry did not explicitly declare a column called "_ID". However,
                  * WeatherEntry implements the interface, "BaseColumns", which does have a field
@@ -107,9 +108,9 @@ public class WeatherDbHelper extends SQLiteOpenHelper {
      */
     @Override
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int oldVersion, int newVersion) {
-        // TODO (3) Within onUpgrade, drop the weather table if it exists
-        sqLiteDatabase.execSQL("DROP TABLE " +  WeatherEntry.TABLE_NAME);
-        // TODO (4) call onCreate and pass in the SQLiteDatabase (passed in to onUpgrade)
+//      COMPLETED (3) Within onUpgrade, drop the weather table if it exists
+        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + WeatherEntry.TABLE_NAME);
+//      COMPLETED (4) call onCreate and pass in the SQLiteDatabase (passed in to onUpgrade)
         onCreate(sqLiteDatabase);
     }
 }
