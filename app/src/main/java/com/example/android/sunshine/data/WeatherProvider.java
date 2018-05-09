@@ -116,17 +116,20 @@ public class WeatherProvider extends ContentProvider {
                 );
                 break;
             case CODE_WEATHER_WITH_DATE:
+                String normalizedUtcDateString  = uri.getLastPathSegment();
+                String[] mSelectionArgs = new String[]{normalizedUtcDateString};
+
                 retCursor = db.query(WeatherEntry.TABLE_NAME,
                         null,
-                        "_id=?",
-                        new String[]{uri.getPathSegments().get(1)},
+                        WeatherEntry.COLUMN_DATE + " = ?",
+                       mSelectionArgs,
                         null,
                         null,
                         sortOrder
                 );
                 break;
             default:
-                throw new SQLiteException("Unknown uri " + uri);
+                throw new SQLiteException("Unknown uri: " + uri);
 
         }
 
