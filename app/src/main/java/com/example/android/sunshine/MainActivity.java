@@ -15,7 +15,6 @@
  */
 package com.example.android.sunshine;
 
-import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -35,27 +34,35 @@ import android.widget.ProgressBar;
 
 import com.example.android.sunshine.data.SunshinePreferences;
 import com.example.android.sunshine.data.WeatherContract;
-import com.example.android.sunshine.data.WeatherContract.WeatherEntry;
 import com.example.android.sunshine.utilities.FakeDataUtils;
 
-
 public class MainActivity extends AppCompatActivity implements
-        ForecastAdapter.ForecastAdapterOnClickHandler,
-        LoaderManager.LoaderCallbacks<Cursor> {
+        LoaderManager.LoaderCallbacks<Cursor>,
+        ForecastAdapter.ForecastAdapterOnClickHandler {
 
     private final String TAG = MainActivity.class.getSimpleName();
 
-    private static String[] MAIN_FORECAST_PROJECTION = new String[]{
-            WeatherEntry.COLUMN_DATE,
-            WeatherEntry.COLUMN_MAX_TEMP,
-            WeatherEntry.COLUMN_MIN_TEMP,
-            WeatherEntry.COLUMN_WEATHER_ID
+    /*
+     * The columns of data that we are interested in displaying within our MainActivity's list of
+     * weather data.
+     */
+    public static final String[] MAIN_FORECAST_PROJECTION = {
+            WeatherContract.WeatherEntry.COLUMN_DATE,
+            WeatherContract.WeatherEntry.COLUMN_MAX_TEMP,
+            WeatherContract.WeatherEntry.COLUMN_MIN_TEMP,
+            WeatherContract.WeatherEntry.COLUMN_WEATHER_ID,
     };
 
+    /*
+     * We store the indices of the values in the array of Strings above to more quickly be able to
+     * access the data from our query. If the order of the Strings above changes, these indices
+     * must be adjusted to match the order of the Strings.
+     */
     public static final int INDEX_WEATHER_DATE = 0;
     public static final int INDEX_WEATHER_MAX_TEMP = 1;
     public static final int INDEX_WEATHER_MIN_TEMP = 2;
     public static final int INDEX_WEATHER_CONDITION_ID = 3;
+
 
     /*
      * This ID will be used to identify the Loader responsible for loading our weather forecast. In
@@ -78,7 +85,6 @@ public class MainActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_forecast);
         getSupportActionBar().setElevation(0f);
-
 
         FakeDataUtils.insertFakeData(this);
 
@@ -133,10 +139,11 @@ public class MainActivity extends AppCompatActivity implements
          * MainActivity implements the ForecastAdapter ForecastOnClickHandler interface, "this"
          * is also an instance of that type of handler.
          */
-        mForecastAdapter = new ForecastAdapter(this, MainActivity.this);
+        mForecastAdapter = new ForecastAdapter(this, this);
 
         /* Setting the adapter attaches it to the RecyclerView in our layout. */
         mRecyclerView.setAdapter(mForecastAdapter);
+
 
         showLoading();
 
@@ -146,6 +153,7 @@ public class MainActivity extends AppCompatActivity implements
          * the last created loader is re-used.
          */
         getSupportLoaderManager().initLoader(ID_FORECAST_LOADER, null, this);
+
     }
 
     /**
@@ -175,21 +183,30 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     /**
-     * Instantiate and return a new Loader for the given ID.
+     * Called by the {@link android.support.v4.app.LoaderManagerImpl} when a new Loader needs to be
+     * created. This Activity only uses one loader, so we don't necessarily NEED to check the
+     * loaderId, but this is certainly best practice.
      *
-     * @param loaderId   The ID whose loader is to be created.
-     * @param loaderArgs Any arguments supplied by the caller.
-     * @return Return a new Loader instance that is ready to start loading.
+     * @param loaderId The loader ID for which we need to create a loader
+     * @param bundle   Any arguments supplied by the caller
+     * @return A new Loader instance that is ready to start loading.
      */
     @Override
-    public Loader<Cursor> onCreateLoader(final int loaderId, final Bundle loaderArgs) {
+    public Loader<Cursor> onCreateLoader(int loaderId, Bundle bundle) {
+
 
         switch (loaderId) {
+
             case ID_FORECAST_LOADER:
+                /* URI for all rows of weather data in our weather table */
                 Uri forecastQueryUri = WeatherContract.WeatherEntry.CONTENT_URI;
-
-                String sortOrder = WeatherContract.WeatherEntry.COLUMN_DATE + "ASC";
-
+                /* Sort order: Ascending by date */
+                String sortOrder = WeatherContract.WeatherEntry.COLUMN_DATE + " ASC";
+                /*
+                 * A SELECTION in SQL declares which rows you'd like to return. In our case, we
+                 * want all weather data from today onwards that is stored in our weather table.
+                 * We created a handy method to do that in our WeatherEntry class.
+                 */
                 String selection = WeatherContract.WeatherEntry.getSqlSelectForTodayOnwards();
 
                 return new CursorLoader(this,
@@ -198,50 +215,62 @@ public class MainActivity extends AppCompatActivity implements
                         selection,
                         null,
                         sortOrder);
+
             default:
                 throw new RuntimeException("Loader Not Implemented: " + loaderId);
         }
     }
 
     /**
-     * Called when a previously created loader has finished its load.
+     * Called when a Loader has finished loading its data.
+     *
+     * NOTE: There is one small bug in this code. If no data is present in the cursor do to an
+     * initial load being performed with no access to internet, the loading indicator will show
+     * indefinitely, until data is present from the ContentProvider. This will be fixed in a
+     * future version of the course.
      *
      * @param loader The Loader that has finished.
-     * @param cursor The data generated by the Loader.
+     * @param data   The data generated by the Loader.
      */
     @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
 
-        mLoadingIndicator.setVisibility(View.INVISIBLE);
-        mForecastAdapter.swapCursor(cursor);
 
-        if (mPosition == RecyclerView.NO_POSITION) {
-            mPosition = 0;
-        }
-
+        mForecastAdapter.swapCursor(data);
+        if (mPosition == RecyclerView.NO_POSITION) mPosition = 0;
         mRecyclerView.smoothScrollToPosition(mPosition);
-
-        if (cursor.getCount() != 0) showWeatherDataView();
+        if (data.getCount() != 0) showWeatherDataView();
     }
 
+    /**
+     * Called when a previously created loader is being reset, and thus making its data unavailable.
+     * The application should at this point remove any references it has to the Loader's data.
+     *
+     * @param loader The Loader that is being reset.
+     */
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
+        /*
+         * Since this Loader's data is now invalid, we need to clear the Adapter that is
+         * displaying the data.
+         */
         mForecastAdapter.swapCursor(null);
     }
-
 
     /**
      * This method is for responding to clicks from our list.
      *
-     * @param weatherForDay String describing weather details for a particular day
+     * @param date Normalized UTC time that represents the local date of the weather in GMT time.
+     * @see WeatherContract.WeatherEntry#COLUMN_DATE
      */
+//  COMPLETED (38) Refactor onClick to accept a long instead of a String as its parameter
     @Override
-    public void onClick(String weatherForDay) {
-        Context context = this;
-        Class destinationClass = DetailActivity.class;
-        Intent intentToStartDetailActivity = new Intent(context, destinationClass);
-        intentToStartDetailActivity.putExtra(Intent.EXTRA_TEXT, weatherForDay);
-        startActivity(intentToStartDetailActivity);
+    public void onClick(long date) {
+        Intent weatherDetailIntent = new Intent(MainActivity.this, DetailActivity.class);
+//      COMPLETED (39) Refactor onClick to pass the URI for the clicked date with the Intent
+        Uri uriForDateClicked = WeatherContract.WeatherEntry.buildWeatherUriWithDate(date);
+        weatherDetailIntent.setData(uriForDateClicked);
+        startActivity(weatherDetailIntent);
     }
 
     /**
@@ -258,7 +287,17 @@ public class MainActivity extends AppCompatActivity implements
         mRecyclerView.setVisibility(View.VISIBLE);
     }
 
+    /**
+     * This method will make the loading indicator visible and hide the weather View and error
+     * message.
+     * <p>
+     * Since it is okay to redundantly set the visibility of a View, we don't need to check whether
+     * each view is currently visible or invisible.
+     */
     private void showLoading() {
+        /* Then, hide the weather data */
+        mRecyclerView.setVisibility(View.INVISIBLE);
+        /* Finally, show the loading indicator */
         mLoadingIndicator.setVisibility(View.VISIBLE);
     }
 
@@ -266,8 +305,10 @@ public class MainActivity extends AppCompatActivity implements
      * This is where we inflate and set up the menu for this Activity.
      *
      * @param menu The options menu in which you place your items.
+     *
      * @return You must return true for the menu to be displayed;
-     * if you return false it will not be shown.
+     *         if you return false it will not be shown.
+     *
      * @see #onPrepareOptionsMenu
      * @see #onOptionsItemSelected
      */
@@ -285,6 +326,7 @@ public class MainActivity extends AppCompatActivity implements
      * Callback invoked when a menu item was selected from this Activity's menu.
      *
      * @param item The menu item that was selected by the user
+     *
      * @return true if you handle the menu click here, false otherwise
      */
     @Override
