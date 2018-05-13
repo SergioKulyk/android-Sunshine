@@ -15,6 +15,7 @@
  */
 package com.example.android.sunshine;
 
+import android.app.IntentService;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -34,6 +35,9 @@ import android.widget.ProgressBar;
 
 import com.example.android.sunshine.data.SunshinePreferences;
 import com.example.android.sunshine.data.WeatherContract;
+import com.example.android.sunshine.sync.SunshineSyncIntentService;
+import com.example.android.sunshine.sync.SunshineSyncTask;
+import com.example.android.sunshine.sync.SunshineSyncUtils;
 import com.example.android.sunshine.utilities.FakeDataUtils;
 
 public class MainActivity extends AppCompatActivity implements
@@ -85,8 +89,6 @@ public class MainActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_forecast);
         getSupportActionBar().setElevation(0f);
-
-        FakeDataUtils.insertFakeData(this);
 
         /*
          * Using findViewById, we get a reference to our RecyclerView from xml. This allows us to
@@ -154,6 +156,7 @@ public class MainActivity extends AppCompatActivity implements
          */
         getSupportLoaderManager().initLoader(ID_FORECAST_LOADER, null, this);
 
+        SunshineSyncUtils.startImmediateSync(this);
     }
 
     /**
@@ -263,11 +266,9 @@ public class MainActivity extends AppCompatActivity implements
      * @param date Normalized UTC time that represents the local date of the weather in GMT time.
      * @see WeatherContract.WeatherEntry#COLUMN_DATE
      */
-//  COMPLETED (38) Refactor onClick to accept a long instead of a String as its parameter
     @Override
     public void onClick(long date) {
         Intent weatherDetailIntent = new Intent(MainActivity.this, DetailActivity.class);
-//      COMPLETED (39) Refactor onClick to pass the URI for the clicked date with the Intent
         Uri uriForDateClicked = WeatherContract.WeatherEntry.buildWeatherUriWithDate(date);
         weatherDetailIntent.setData(uriForDateClicked);
         startActivity(weatherDetailIntent);
