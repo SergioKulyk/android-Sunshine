@@ -57,10 +57,17 @@
             android:name=".data.WeatherProvider"
             android:authorities="@string/content_authority"
             android:exported="false"/>
-        
+
+        <!--This is required for immediate syncs -->
         <service
             android:name=".sync.SunshineSyncIntentService"
-            android:exported="false"/>
+            android:exported="false" />
 
+        <service android:name=".sync.SunshineFirebaseJobService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.ACTION_EXECUTE"/>
+            </intent-filter>
+        </service>
     </application>
 </manifest>
