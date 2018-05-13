@@ -18,15 +18,17 @@ package com.example.android.sunshine.sync;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.text.format.DateUtils;
 
+import com.example.android.sunshine.data.SunshinePreferences;
 import com.example.android.sunshine.data.WeatherContract;
 import com.example.android.sunshine.utilities.NetworkUtils;
+import com.example.android.sunshine.utilities.NotificationUtils;
 import com.example.android.sunshine.utilities.OpenWeatherJsonUtils;
 
 import java.net.URL;
 
 public class SunshineSyncTask {
-
 
     /**
      * Performs the network request for updated weather, parses the JSON from that request, and
@@ -37,7 +39,6 @@ public class SunshineSyncTask {
      * @param context Used to access utility methods and the ContentResolver
      */
     synchronized public static void syncWeather(Context context) {
-
 
         try {
             /*
@@ -74,14 +75,45 @@ public class SunshineSyncTask {
                 sunshineContentResolver.bulkInsert(
                         WeatherContract.WeatherEntry.CONTENT_URI,
                         weatherValues);
-            }
+
+//              COMPLETED (13) Check if notifications are enabled
+                /*
+                 * Finally, after we insert data into the ContentProvider, determine whether or not
+                 * we should notify the user that the weather has been refreshed.
+                 */
+                boolean notificationsEnabled = SunshinePreferences.areNotificationsEnabled(context);
+
+                /*
+                 * If the last notification was shown was more than 1 day ago, we want to send
+                 * another notification to the user that the weather has been updated. Remember,
+                 * it's important that you shouldn't spam your users with notifications.
+                 */
+                long timeSinceLastNotification = SunshinePreferences
+                        .getEllapsedTimeSinceLastNotification(context);
+
+                boolean oneDayPassedSinceLastNotification = false;
+
+//              COMPLETED (14) Check if a day has passed since the last notification
+                if (timeSinceLastNotification >= DateUtils.DAY_IN_MILLIS) {
+                    oneDayPassedSinceLastNotification = true;
+                }
+
+                /*
+                 * We only want to show the notification if the user wants them shown and we
+                 * haven't shown a notification in the past day.
+                 */
+//              COMPLETED (15) If more than a day have passed and notifications are enabled, notify the user
+                if (notificationsEnabled && oneDayPassedSinceLastNotification) {
+                    NotificationUtils.notifyUserOfNewWeather(context);
+                }
 
             /* If the code reaches this point, we have successfully performed our sync */
+
+            }
 
         } catch (Exception e) {
             /* Server probably invalid */
             e.printStackTrace();
         }
     }
-
 }
