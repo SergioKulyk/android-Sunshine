@@ -1,3 +1,18 @@
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.example.android.sunshine.sync;
 
 import android.content.ContentResolver;
@@ -11,7 +26,19 @@ import com.example.android.sunshine.utilities.OpenWeatherJsonUtils;
 import java.net.URL;
 
 public class SunshineSyncTask {
+
+
+    /**
+     * Performs the network request for updated weather, parses the JSON from that request, and
+     * inserts the new weather information into our ContentProvider. Will notify the user that new
+     * weather has been loaded if the user hasn't been notified of the weather within the last day
+     * AND they haven't disabled notifications in the preferences screen.
+     *
+     * @param context Used to access utility methods and the ContentResolver
+     */
     synchronized public static void syncWeather(Context context) {
+
+
         try {
             /*
              * The getUrl method will return the URL that we need to get the forecast JSON for the
@@ -56,4 +83,5 @@ public class SunshineSyncTask {
             e.printStackTrace();
         }
     }
+
 }

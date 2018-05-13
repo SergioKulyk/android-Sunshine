@@ -16,7 +16,6 @@
 package com.example.android.sunshine;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.preference.CheckBoxPreference;
@@ -27,7 +26,6 @@ import android.support.v7.preference.PreferenceScreen;
 
 import com.example.android.sunshine.data.SunshinePreferences;
 import com.example.android.sunshine.data.WeatherContract;
-import com.example.android.sunshine.sync.SunshineSyncIntentService;
 import com.example.android.sunshine.sync.SunshineSyncUtils;
 
 /**
